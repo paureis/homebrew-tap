@@ -1,0 +1,72 @@
+name: Test
+
+# One Linux job in Homebrew's container (the owner's CI budget: no macOS runners,
+# no matrix, no bottles). Shape from Homebrew's tap-new template
+# (Homebrew/brew .github/workflows/tap-new-tests.yml, Library/Homebrew/dev-cmd/tap-new.rb).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -xeuo pipefail {0}
+
+jobs:
+  formula:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: ghcr.io/homebrew/brew:main # zizmor: ignore[unpinned-images] (as Homebrew's template)
+      options: --privileged
+    steps:
+      # setup-homebrew fetches this repository itself (anonymously, as it is public) and taps it as
+      # paureis/tap, so there is no actions/checkout step and no stored git credential to persist.
+      # No `token` input: it would be written into git's config for the rest of the job.
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@eb02c69dbabdb66ff183c614f4ce7ab3c077592c # 2026.10.12.1
+
+      - name: Cache Homebrew Bundler RubyGems
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: ubuntu-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: ubuntu-rubygems-
+
+      - name: The tap is this checkout
+        env:
+          TAP_NAME: ${{ steps.set-up-homebrew.outputs.tap-name }}
+        run: test "$TAP_NAME" = "paureis/tap"
+
+      - run: brew style paureis/tap
+
+      - run: brew audit --strict --online --formula paureis/tap/cloudpin
+
+      - run: brew install --build-from-source paureis/tap/cloudpin
+
+      - run: brew test paureis/tap/cloudpin
+
+      # Control: the checks above prove nothing unless a wrong checksum is refused.
+      - name: A wrong sha256 must fail the download
+        run: |
+          formula="$(brew --repository paureis/tap)/Formula/cloudpin.rb"
+          zeros="$(printf '%064d' 0)"
+          sed -i -E "s/^  sha256 \"[0-9a-f]{64}\"$/  sha256 \"${zeros}\"/" "$formula"
+          grep -qx "  sha256 \"${zeros}\"" "$formula"
+          if out="$(brew fetch --force --formula paureis/tap/cloudpin 2>&1)"; then
+            echo "$out"
+            echo "::error::brew fetch accepted a wrong sha256"
+            exit 1
+          fi
+          echo "$out"
+          # Failing for another reason (say, the network) would prove nothing.
+          grep -q "SHA-256 mismatch" <<< "$out"
+          echo "brew fetch refused the wrong sha256, as it should"
