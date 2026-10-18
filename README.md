@@ -14,6 +14,9 @@ brew install paureis/tap/cloudpin
 Upgrade with `brew upgrade cloudpin`. cloudpin runs on Homebrew's own Node.js (the `node` formula), which Homebrew
 installs if it isn't there yet, even when another Node.js (nvm, the nodejs.org installer) is on PATH.
 
+Switching from npm? Run `npm uninstall --global cloudpin` first. A copy installed with npm under Homebrew's Node.js
+owns `$(brew --prefix)/bin/cloudpin`, so `brew install` can't link its own and the old copy keeps running.
+
 ## What it installs
 
 The formula installs cloudpin's npm package, `https://registry.npmjs.org/cloudpin/-/cloudpin-X.Y.Z.tgz`, with
@@ -22,9 +25,10 @@ Homebrew's standard Node.js recipe. Its `sha256` is the one listed in the `SHA25
 carries a signed build-provenance attestation. To check it yourself:
 
 ```sh
-curl -fsSLO https://registry.npmjs.org/cloudpin/-/cloudpin-1.1.0.tgz
-gh attestation verify cloudpin-1.1.0.tgz --repo paureis/cloudpin   # built and signed by cloudpin's release workflow
-shasum -a 256 cloudpin-1.1.0.tgz                                   # equals the sha256 in Formula/cloudpin.rb
+v=$(brew list --versions cloudpin | awk '{print $2}')                # the installed version
+curl -fsSLO "https://registry.npmjs.org/cloudpin/-/cloudpin-$v.tgz"
+gh attestation verify "cloudpin-$v.tgz" --repo paureis/cloudpin   # built and signed by cloudpin's release workflow
+shasum -a 256 "cloudpin-$v.tgz"                                   # equals the sha256 in Formula/cloudpin.rb
 ```
 
 Installing changes no shell profile and installs no agent hook. To be protected, run the next steps yourself (see

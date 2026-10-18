@@ -58,6 +58,8 @@ jobs:
       - name: A wrong sha256 must fail the download
         run: |
           formula="$(brew --repository paureis/tap)/Formula/cloudpin.rb"
+          real="$(sed -n -E 's/^  sha256 "([0-9a-f]{64})"$/\1/p' "$formula")"
+          test "${#real}" = 64
           zeros="$(printf '%064d' 0)"
           sed -i -E "s/^  sha256 \"[0-9a-f]{64}\"$/  sha256 \"${zeros}\"/" "$formula"
           grep -qx "  sha256 \"${zeros}\"" "$formula"
@@ -67,6 +69,8 @@ jobs:
             exit 1
           fi
           echo "$out"
-          # Failing for another reason (say, the network) would prove nothing.
-          grep -q "SHA-256 mismatch" <<< "$out"
+          # Failing for another reason (say, the network) would prove nothing: the download must
+          # have happened, and hashed to the formula's real sha256 (wording as brew 2026-10).
+          grep -q "reports different checksum" <<< "$out"
+          grep -q "SHA-256 checksum of downloaded file: ${real}" <<< "$out"
           echo "brew fetch refused the wrong sha256, as it should"
