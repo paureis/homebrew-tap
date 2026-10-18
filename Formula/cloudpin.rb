@@ -42,7 +42,7 @@ class Cloudpin < Formula
         subscription: 00000000-0000-0000-0000-000000000000
     YAML
     cd testpath/"accepted" do
-      with_env(PATH: Formula["node"].opt_bin.to_s) do
+      with_env(PATH: formula_opt_bin("node").to_s) do
         assert_match "az is not installed here", shell_output("#{bin}/cloudpin check")
       end
     end
