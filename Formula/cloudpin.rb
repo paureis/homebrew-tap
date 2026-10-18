@@ -36,12 +36,13 @@ class Cloudpin < Formula
     end
 
     # A valid pin passes when its CLI (az) isn't installed: there is nothing to check.
+    # PATH holds only node, so an az in /usr/bin (Microsoft's apt package) can't be found.
     (testpath/"accepted/.cloudpin.yml").write <<~YAML
       azure:
         subscription: 00000000-0000-0000-0000-000000000000
     YAML
     cd testpath/"accepted" do
-      with_env(PATH: "#{Formula["node"].opt_bin}:/usr/bin:/bin") do
+      with_env(PATH: Formula["node"].opt_bin.to_s) do
         assert_match "az is not installed here", shell_output("#{bin}/cloudpin check")
       end
     end

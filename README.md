@@ -11,7 +11,8 @@ On macOS or Linux:
 brew install paureis/tap/cloudpin
 ```
 
-Upgrade with `brew upgrade cloudpin`. Homebrew installs Node.js too if you don't have it.
+Upgrade with `brew upgrade cloudpin`. cloudpin runs on Homebrew's own Node.js (the `node` formula), which Homebrew
+installs if it isn't there yet, even when another Node.js (nvm, the nodejs.org installer) is on PATH.
 
 ## What it installs
 
