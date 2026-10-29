@@ -70,7 +70,8 @@ jobs:
           fi
           echo "$out"
           # Failing for another reason (say, the network) would prove nothing: the download must
-          # have happened, and hashed to the formula's real sha256 (wording as brew 2026-10).
+          # have happened, and hashed to the formula's real sha256 (wording as brew 2026-10; since
+          # late 2026-10 brew pads the hash to line up with the expected one, so any run of spaces).
           grep -q "reports different checksum" <<< "$out"
-          grep -q "SHA-256 checksum of downloaded file: ${real}" <<< "$out"
+          grep -qE "SHA-256 checksum of downloaded file: +${real}" <<< "$out"
           echo "brew fetch refused the wrong sha256, as it should"
