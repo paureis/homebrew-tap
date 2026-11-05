@@ -1,8 +1,8 @@
 class Cloudpin < Formula
   desc "Pin cloud CLI accounts to a repo and block commands on the wrong one"
   homepage "https://github.com/paureis/cloudpin"
-  url "https://registry.npmjs.org/cloudpin/-/cloudpin-1.2.1.tgz"
-  sha256 "e56e62ef1cffb73f058ad6f9f20223ddaf09238c3b3b7919f03cc3644c91ae3c"
+  url "https://registry.npmjs.org/cloudpin/-/cloudpin-1.2.2.tgz"
+  sha256 "6515d385122cfb815717c125fd4685d8d139ea926b438d6562a44a2a163a173e"
   license "MIT"
 
   depends_on "node"
